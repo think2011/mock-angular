@@ -2,32 +2,43 @@
 (function() {
   (function() {
     return Mock.mockjax = function(module) {
-      var error, item;
-      item = {
-        find: function(url) {
+      var Item, error;
+      Item = (function() {
+        function Item() {}
+
+        Item.prototype.add = function(url) {
           var k, v, _ref;
-          this.template = {};
           _ref = Mock._mocked;
           for (k in _ref) {
             v = _ref[k];
             if (k === url) {
-              return this.template = Mock.mock(v.template);
+              return this[url] = Mock.mock(v.template);
             }
           }
-        },
-        template: {}
-      };
+        };
+
+        return Item;
+
+      })();
       try {
         return module.config(function($httpProvider) {
+          var item;
+          item = new Item();
           return $httpProvider.interceptors.push(function() {
             return {
               request: function(config) {
-                item.find(config.url);
-                config.url = "?mockUrl=" + config.url;
+                item.add(config.url);
+                if (item[config.url]) {
+                  config.url = "?mockUrl=" + config.url;
+                }
                 return config;
               },
               response: function(response) {
-                response.data = item.template;
+                var url;
+                url = response.config.url.substr(9);
+                if (item[url]) {
+                  response.data = item[url];
+                }
                 return response;
               }
             };

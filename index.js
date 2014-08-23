@@ -8,10 +8,16 @@
       var box;
       box = $scope.box = [];
       $scope.get = function() {
-        return $http({
+        $http({
           url: 'http://g.cn'
         }).success(function(data) {
           return box.push(data);
+        });
+
+        $http({
+          url: 'http://baidu.com'
+        }).success(function(data) {
+            console.log(data);
         });
       };
       return $scope.get();
