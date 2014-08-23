@@ -29,14 +29,25 @@
               request: function(config) {
                 item.add(config.url);
                 if (item[config.url]) {
+                  config.original = {
+                    url: config.url,
+                    result: {},
+                    method: config.method,
+                    params: config.params,
+                    data: config.data
+                  };
+                  config.method = "GET";
                   config.url = "?mockUrl=" + config.url;
                 }
                 return config;
               },
               response: function(response) {
-                var url;
+                var original, url;
+                original = response.config.original;
                 url = response.config.url.substr(9);
                 if (item[url]) {
+                  original.result = item[url];
+                  console.log(original);
                   response.data = item[url];
                 }
                 return response;
@@ -52,5 +63,3 @@
   })();
 
 }).call(this);
-
-//# sourceMappingURL=mock.angular.map

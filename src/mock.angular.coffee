@@ -15,14 +15,30 @@ do ->
           request: (config) ->
             # 添加链接到缓存区
             item.add config.url
-            if item[config.url] then config.url = "?mockUrl=#{config.url}"
+            if item[config.url]
+              # 保存原始信息
+              config.original =
+                url   : config.url
+                result: {}
+                method: config.method
+                params: config.params
+                data  : config.data
+
+              config.method = "GET"
+              config.url    = "?mockUrl=#{config.url}"
 
             return config
 
           response: (response) ->
             # 拦截输出缓存区的数据
-            url = response.config.url.substr 9
-            if item[url] then response.data = item[url]
+            original = response.config.original
+            url      = response.config.url.substr 9
+            if item[url]
+              # 输出原始信息
+              original.result = item[url]
+              console.log original
+
+              response.data = item[url]
 
             return response
           }

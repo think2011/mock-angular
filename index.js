@@ -9,7 +9,10 @@
       box = $scope.box = [];
       $scope.get = function() {
         $http({
-          url: 'http://g.cn'
+          url: 'http://g.cn',
+          method: 'POST',
+          params: {a: 1},
+          data  : {b:1}
         }).success(function(data) {
           return box.push(data);
         });
