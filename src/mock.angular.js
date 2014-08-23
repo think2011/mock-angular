@@ -7,12 +7,18 @@
         function Item() {}
 
         Item.prototype.add = function(url) {
-          var k, v, _ref;
+          var k, reg, v, _ref;
           _ref = Mock._mocked;
           for (k in _ref) {
             v = _ref[k];
-            if (k === url) {
-              return this[url] = Mock.mock(v.template);
+            reg = null;
+            if (/^\/.*\/$/.test(k)) {
+              reg = eval(k);
+            } else {
+              reg = new RegExp(k);
+            }
+            if (reg.test(url)) {
+              return Mock.mock(v.template);
             }
           }
         };
@@ -27,17 +33,27 @@
           return $httpProvider.interceptors.push(function() {
             return {
               request: function(config) {
-                item.add(config.url);
-                if (item[config.url]) {
+                var result;
+                result = item.add(config.url);
+                if (result) {
+                  config.original = {
+                    url: config.url,
+                    result: result,
+                    method: config.method,
+                    params: config.params,
+                    data: config.data
+                  };
+                  config.method = "GET";
                   config.url = "?mockUrl=" + config.url;
                 }
                 return config;
               },
               response: function(response) {
-                var url;
-                url = response.config.url.substr(9);
-                if (item[url]) {
-                  response.data = item[url];
+                var original;
+                original = response.config.original;
+                if (original) {
+                  response.data = original.result;
+                  console.log(original);
                 }
                 return response;
               }
@@ -52,5 +68,3 @@
   })();
 
 }).call(this);
-
-//# sourceMappingURL=mock.angular.map

@@ -3,8 +3,14 @@ do ->
     class Item
       add: (url) ->
         for k, v of Mock._mocked
-          if k is url
-            return @[url] = Mock.mock v.template
+          reg = null
+          if /^\/.*\/$/.test k
+            reg = eval k
+          else
+            reg = new RegExp k
+
+          if reg.test url
+            return Mock.mock v.template
 
     try
       module.config ($httpProvider) ->
@@ -13,16 +19,28 @@ do ->
         $httpProvider.interceptors.push ->
           return {
           request: (config) ->
-            # 添加链接到缓存区
-            item.add config.url
-            if item[config.url] then config.url = "?mockUrl=#{config.url}"
+            # 匹配mock
+            result = item.add config.url
+            if result
+              # 保存原始信息
+              config.original =
+                url   : config.url
+                result: result
+                method: config.method
+                params: config.params
+                data  : config.data
+
+              config.method = "GET"
+              config.url    = "?mockUrl=#{config.url}"
 
             return config
 
           response: (response) ->
-            # 拦截输出缓存区的数据
-            url = response.config.url.substr 9
-            if item[url] then response.data = item[url]
+            # 拦截输出mock
+            original = response.config.original
+            if original
+              response.data = original.result
+              console.log original
 
             return response
           }
